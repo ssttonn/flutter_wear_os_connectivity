@@ -20,8 +20,8 @@ class MyAndroidApp extends StatefulWidget {
 class _MyAndroidAppState extends State<MyAndroidApp> {
   FlutterWearOsConnectivity _flutterWearOsConnectivity =
       FlutterWearOsConnectivity();
-  List<DataLayerAPIDevice> _deviceList = [];
-  DataLayerAPIDevice? _selectedDevice;
+  List<WearOsDevice> _deviceList = [];
+  WearOsDevice? _selectedDevice;
   WearOSMessage? _currentMessage;
   DataItem? _dataItem;
   List<StreamSubscription<WearOSMessage>> _messageSubscriptions = [];
@@ -72,7 +72,7 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
     _connectedDeviceCapabilitySubscription?.cancel();
   }
 
-  void _updateDeviceList(List<DataLayerAPIDevice> devices) {
+  void _updateDeviceList(List<WearOsDevice> devices) {
     setState(() {
       _deviceList = devices;
     });

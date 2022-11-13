@@ -44,23 +44,23 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
 
   /// Get current connected devices
   ///
-  /// This method returns a [List] of [DataLayerAPIDevice]
-  Future<List<DataLayerAPIDevice>> getConnectedDevices() async {
+  /// This method returns a [List] of [WearOsDevice]
+  Future<List<WearOsDevice>> getConnectedDevices() async {
     List rawNodes = await channel.invokeMethod("getConnectedDevices");
     return rawNodes.map((nodeJson) {
-      return DataLayerAPIDevice.fromRawData(channel, (nodeJson as Map? ?? {}));
+      return WearOsDevice.fromRawData(channel, (nodeJson as Map? ?? {}));
     }).toList();
   }
 
   /// Get current local device (your phone) information
   ///
-  /// This method returns a single [DataLayerAPIDevice]
-  Future<DataLayerAPIDevice> getLocalDevice() async {
+  /// This method returns a single [WearOsDevice]
+  Future<WearOsDevice> getLocalDevice() async {
     Map data = (await channel.invokeMethod("getLocalDeviceInfo")) as Map? ?? {};
-    return DataLayerAPIDevice.fromRawData(channel, data.toMapStringDynamic());
+    return WearOsDevice.fromRawData(channel, data.toMapStringDynamic());
   }
 
-  /// Call this method when you have a bluetooth address and need to find [DataLayerAPIDevice] id
+  /// Call this method when you have a bluetooth address and need to find [WearOsDevice] id
   ///
   /// This method return a nullable [String] value
   Future<String?> findDeviceIdFromBluetoothAddress(String address) async {
@@ -71,7 +71,7 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
   ///
   /// Each device can declare their new capability via [registerNewCapability] method
   ///
-  /// This method return a [Map] of [CapabilityInfo
+  /// This method return a [Map] of [CapabilityInfo]
   Future<Map<String, CapabilityInfo>> getAllCapabilities(
       {CapabilityFilterType filterType = CapabilityFilterType.all}) async {
     Map data =
@@ -93,9 +93,9 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     return CapabilityInfo.fromJson(data.toMapStringDynamic());
   }
 
-  /// Register new capability to local device
+  /// Announces that a capability has become available on the local device
   ///
-  /// After you declare new capability, other devices can see your capability via [getAllCapabilities]
+  /// After you declare new capability, other devices can see your local device's capabilities via [getAllCapabilities]
   Future<void> registerNewCapability(String name) {
     return channel.invokeMethod("registerNewCapability", name);
   }
@@ -137,11 +137,6 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
             as Map<String, StreamController<CapabilityInfo>>;
     _capabilityInfoStreamControllers[key] = StreamController.broadcast();
     yield* _capabilityInfoStreamControllers[key]!.stream;
-  }
-
-  bool isCapabilityHasListener({String? name, Uri? uri}) {
-    return _wearOSObserver.streamControllers[ObservableType.capability]!
-        .containsKey(name ?? uri.toString());
   }
 
   /// Completely remove a capability listener
