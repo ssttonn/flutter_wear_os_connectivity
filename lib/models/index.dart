@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 
-import '../helpers/index.dart';
 import '../flutter_wear_os_connectivity.dart';
 
 part 'message.dart';
