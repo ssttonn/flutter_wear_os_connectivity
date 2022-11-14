@@ -1,7 +1,7 @@
 # Flutter WearOS Connectivity
 [![Version](https://img.shields.io/pub/v/flutter_wear_os_connectivity?color=%23212121&label=Version&style=for-the-badge)](https://pub.dev/packages/flutter_wear_os_connectivity)
 [![Publisher](https://img.shields.io/pub/publisher/flutter_wear_os_connectivity?color=E94560&style=for-the-badge)](https://pub.dev/publishers/sstonn.xyz)
-[![Points](https://img.shields.io/pub/points/flutter_watch_os_connectivity?color=FF9F29&style=for-the-badge)](https://pub.dev/packages/flutter_wear_os_connectivity)
+[![Points](https://img.shields.io/pub/points/flutter_wear_os_connectivity?color=FF9F29&style=for-the-badge)](https://pub.dev/packages/flutter_wear_os_connectivity)
 [![LINCENSE](https://img.shields.io/github/license/ssttonn/flutter_wear_os_connectivity?color=0F3460&style=for-the-badge)](https://github.com/ssttonn/flutter_wear_os_connectivity/blob/master/LICENSE)
 
 <img src="https://lh3.googleusercontent.com/sgOTO5d4GOFYcS1AuBTFE437uZ0thonKstWgaY_raYv6ZfjZXeukGwujnHN8qjPs5xfnp-vtKIgXqq442dV13nA2roqJc_cChA=rw-e365-w1200"/>
@@ -24,36 +24,29 @@ A plugin that provides a wrapper that enables Flutter apps to communicate with a
     - [Configuring Data Layer API dependencies](#configuring_activation)
         - [Configure](#configuring_activation_1)
     - [Obtaning connected devices in Android Wear network](#getting_paired_device_accessibility)
-        - [Getting current paired device information](#getting_paired_device_accessibility_1)
-        - [Listen to paired device information changed](#getting_paired_device_accessibility_2)
-        - [Getting reachability of `WatchOsPairedDeviceInfo`](#getting_paired_device_accessibility_3)
-        - [Listen `WatchOsPairedDeviceInfo` reachability state changed
-        ](#getting_paired_device_accessibility_4)
-    - [Sending and handling messages](#send_message)
-        - [Send message](#send_message_1)
-        - [Send message and wait for reply](#send_message_2)
-        - [Receive messages](#send_message_3)
-        - [Reply the message](#send_message_4)
-    - [Obtaining and syncing `ApplicationContext`](#application_context)
-        - [Obtaining an `ApplicationContext`](#application_context_1)
-        - [Syncing an `ApplicationContext`](#application_context_2)
-        - [Listen to `ApplicationContext` changed](#application_context_3)
-    - [Transfering and handling user info with `UserInfoTransfer`](#transfer_user_info)
-        - [Transfering user info](#transfer_user_info_1)
-        - [Canceling an `UserInfoTransfer`](#transfer_user_info_2)
-        - [Obtaining the number of complication transfers remaining](#transfer_user_info_3)
-        - [Waiting for upcoming `UserInfoTransfer`s](#transfer_user_info_4)
-        - [Obtaning a list of pending `UserInfoTransfer`](#transfer_user_info_5)
-        - [Listen to pending `UserInfoTransfer` list changed](#transfer_user_info_6)
-        - [Listen to the completion event of `UserInfoTransfer`](#transfer_user_info_7)
-    - [Transfering and handling `File` with `FileTransfer`](#transfer_file)
-        - [Transfering file](#transfer_file_1)
-        - [Obtaning current on progress `UserInfoTransfer` list](#transfer_file_2)
-        - [Canceling a `FileTransfer`](#transfer_file_3)
-        - [Obtaning a list of pending `FileTransfer`](#transfer_file_4)
-        - [Listen to pending `FileTransfer` list changed](#transfer_file_5)
-        - [Waiting for upcoming `FileTransfer`s](#transfer_file_6)
-        - [Listen to the completion event of `FileTransfer`](#transfer_file_7)
+        - [Obtaining all connected devices](#getting_paired_device_accessibility_1)
+        - [Obtaining local device](#getting_paired_device_accessibility_2)
+        - [Find Device ID from bluetooth address](#getting_paired_device_accessibility_3)
+    - [Advertise and query remote capabilities](#handling_capabilities)
+        - [Advertise new device capability](#handling_capabilities_1)
+        - [Remove existing capability](#handling_capabilities_2)
+        - [Obtain all available capabilities on Android Wear network](#handling_capabilities_3)
+        - [Find a capability by name](#handling_capabilities_4)
+        - [Subscribing to capability changed](#handling_capabilities_5)
+        - [Unsubscribing to capability changed](#handling_capabilities_6)
+    - [Sending and handling `WearOsMessage`](#send_message)
+        - [Send a message to a specific path](#send_message_1)
+        - [Listen to upcoming `WearOsMessage` receive events](#send_message_2)
+        - [Unlisten for upcoming `WearOsMessage` receive events](#send_message_3)
+    - [Synchronize and manage `DataItem`](#sync_data)
+        - [Synchronize data on specific path](#sync_data_1)
+        - [Sync files to specific path](#sync_data_2)
+        - [Obtain all available `DataItems`](#sync_data_3)
+        - [Find `DataItem` from specific path](#sync_data_4)
+        - [Find `DataItems` from specific path](#sync_data_5)
+        - [Delete `DataItems` from specific path](#sync_data_6)
+        - [Listen to upcoming `DataItem` change or delete events](#sync_data_7)
+        - [Unlisten to `DataItem` changed](#sync_data_8)
 
 ## Screenshots <a name="screenshots"/>
 
@@ -121,18 +114,16 @@ For example: `wear://<deviceId>/<customPath>`
 
 `WearOsDevice` has following properties:
 - `id`
-
-An opaque string that represents a device in the Android Wear network.
+An opaque string that represents a `WearOsDevice` in the Android Wear network.
 
 - `name`
-
-The name of the device.
+The name of the `WearOsDevice`.
 
 - `isNearby`
-
-A `bool` value indicating that this device can be considered geographically nearby the local device.
+A `bool` value indicating that this `WearOsDevice` can be considered geographically nearby the local `WearOsDevice`.
 
 - `getCompanionPackageName`
+A method gets the package name for the Companion application associated with this `WearOsDevice`.
 
 #### Obtaining all connected devices <a name="getting_paired_device_accessibility_1"/>
 Get current connected devices in Android Wear network. This method returns a `List` of `WearOsDevice`.
@@ -166,11 +157,9 @@ The capability information will be retrieved as `CapabilityInfo` object.
 
 `CapabilityInfo` object contains following properties:
 - `name`
-
 Name of capability which can be declared from [Advertise new device capability](#handling_capabilities_1).
 
 - `associatedDevices`
-
 A `Set` of `WearOsDevice` indicating which devices associated with corresponding capability.
 
 #### Advertise new device capability <a name="handling_capabilities_1"/>
@@ -227,7 +216,7 @@ CapabilityInfo? _capabilityInfo = await _flutterWearOsConnectivity.findCapabilit
 ```
 
 #### Subscribing to capability changed <a name="handling_capabilities_5"/>
-You can listen to `CapabilityInfo` changed via capability name
+You can either listen to `CapabilityInfo` changed via capability name
 
 ```dart
 _flutterWearOsConnectivity.capabilityChanged(capabilityName: "sample_capability_1").listen((capabilityInfo) {
@@ -237,7 +226,7 @@ _flutterWearOsConnectivity.capabilityChanged(capabilityName: "sample_capability_
 
 Or via capability path
 ```dart
-_flutterWearOsConnectivity.capabilityChanged(capabilityPath: Uri(scheme: "wear", host: "*", path: "/sample_capability_1")).listen((capabilityInfo) {
+_flutterWearOsConnectivity.capabilityChanged(capabilityPathURI: Uri(scheme: "wear", host: "*", path: "/sample_capability_1")).listen((capabilityInfo) {
     inspect(capabilityInfo);
 });
 ```
@@ -245,7 +234,7 @@ _flutterWearOsConnectivity.capabilityChanged(capabilityPath: Uri(scheme: "wear",
 
 
 #### Unsubscribing to capability changed <a name="handling_capabilities_6"/>
-You can also unlisten to CapabilityInfo changed via capability name
+You can either unlisten to CapabilityInfo changed via capability name
 ```dart
 _flutterWearOsConnectivity.removeCapabilityListener(capabilityName: "sample_capability_1");
 ```
@@ -253,20 +242,237 @@ _flutterWearOsConnectivity.removeCapabilityListener(capabilityName: "sample_capa
 Or via capability path
 
 ```dart
-_flutterWearOsConnectivity.removeCapabilityListener(capabilityPath: Uri(scheme: "wear", host: "*", path: "/sample_capability_1"));
+_flutterWearOsConnectivity.removeCapabilityListener(capabilityPathURI: Uri(scheme: "wear", host: "*", path: "/sample_capability_1"));
 ```
 > Note: Capability path is provided in following format by Wear network: `wear://*/<capabilityName>`
 
 ---
 ### Sending and handling `WearOsMessage` <a name="send_message"/>
-#### Listen to upcoming `WearOsMessage` receive events <a name="send_message_1"/>
-#### Unlisten for upcoming `WearOsMessage` receive events <a name="send_message_2"/>
+Messages are stored in a unique path within the Android Wear network. Messaging is a good one-way communication mechanism for remote procedure calls (RPC), such as sending a message to a wearable to initiate an activity.
+
+> Note: Message paths are auto-generated by Android Wear network in the following format: `wear://<deviceId>/<messagePath>`
+
+Message is presented in `WearOSMessage` object. 
+
+`WearOSMessage` has following properties:
+
+- `data`
+An Uin8List payload that represents message data.
+
+- `path`
+A unique `String` path represents message route within the Android Wear network.
+
+- `requestId`
+The `String` uniquely identifies the `WearOSMessage` once it is sent.
+
+- `senderDeviceId`
+The device ID of the sender.
+
+#### Send a message to a specific path <a name="send_message_1"/>
+You can send a message to other devices
+```
+String requestId = await _flutterWearOsConnectivity.sendMessage(bytes, 
+    deviceId: _selectedDevice!.id, path: "/sample-message", 
+    message, 
+    priority: MessagePriority.low
+).then(print);
+```
+
+The system will opportunely send the message, if you have a message you want to send immediately, set the `priority` to `MessagePriority.high`
+
+#### Listen to upcoming `WearOsMessage` receive events <a name="send_message_2"/>
+You can either listen to global message receive events
+```dart
+_flutterWearOsConnectivity.messageReceived().listen((message) {
+    inspect(message);
+});
+```
+
+Or listen to message events that belong to a specific message `path`
+
+```dart
+_flutterWearOsConnectivity.messageReceived(pathURI: Uri(scheme: "wear", host: _selectedDevice?.id, path: "/wearos-message-path")).listen((message) {
+    inspect(message);
+});
+```
+
+In a example above, you're listen to a path on specific device, you can also listen to a path on all devices associated with Android Wear network.
+
+```dart
+_flutterWearOsConnectivity.messageReceived(pathURI: Uri(scheme: "wear", host: "*", path: "/wearos-message-path")).listen((message) {
+    inspect(message);
+});
+```
+
+> Note: In the example above, the host is setted to `*`, which means that all devices on current Android Wear network will be matched.
+
+#### Unlisten for upcoming `WearOsMessage` receive events <a name="send_message_3"/>
+You can either unlisten to global message received events
+```dart
+_flutterWearOsConnectivity.removeMessageListener();
+```
+
+Or unlisten to message events that belong to a specific message `path`
+
+```dart
+_flutterWearOsConnectivity.removeMessageListener(pathURI: Uri(
+    scheme: "wear",
+    host: _selectedDevice?.id, // specific device id
+    path: "/wearos-message-path"
+));
+
+_flutterWearOsConnectivity.removeMessageListener(pathURI: Uri(
+    scheme: "wear",
+    host: "*", // all devices
+    path: "/wearos-message-path"
+));
+```
+
 ---
 ### Synchronize and manage `DataItem` <a name="sync_data"/>
+Same as messages, data items are also store in a unique path within the Android Wear network. A `DataItem` is synchronized across all devices in an Android Wear network. It is possible to set data items while not connected to any nodes. Those data items will be synchronized when the nodes eventually come online.
+
+> Note: Data paths are auto-generated by Android Wear network in the following format: `wear://<deviceId>/<dataPath>`
+
+The data will be constructed inside `DataItem` object.
+
+`DataItem` object contains following properties:
+- `data`
+An Uin8List payload that represents the encoded data.
+
+- `pathURI`
+A unique `Uri` path represents data route within the Android Wear network.
+
+- `mapData`
+A human-readable `Map<String, dynamic>` data of `data`.
+
+- `files`
+List of files contained inside this `DataItem`.
+
 #### Synchronize data on specific path <a name="sync_data_1"/>
-#### Find `DataItem` from specific path <a name="sync_data_2"/>
-#### Find `DataItem` list from specific path <a name="sync_data_3"/>
-#### Delete `DataItem` list from specific path <a name="sync_data_4"/>
-#### Obtain all available `DataItem`s <a name="sync_data_5"/>
-#### Listen to upcoming `DataItem` changed <a name="sync_data_6"/>
-#### Unlisten to `DataItem` changed <a name="sync_data_7"/>
+To sync `DataItem` on a specific path, call `syncData` method
+
+```dart
+DataItem? _dataItem = await _flutterWearOsConnectivity.syncData(path: "/data-path", data: {
+    "message": "Data sync by AndroidOS app on /data-path at ${DateTime.now().millisecondsSinceEpoch}"
+}, isUrgent: false);
+```
+
+This method return an optional `DataItem` indicating whether the `DataItem` is successfully synchronized.
+
+The system will opportunely sync the data, if you want your `DataItem` to be synchronized immediately, set `isUrgent` to `true`.
+
+#### Sync files to specific path <a name="sync_data_2"/>
+Not only for data, we can also synchronize files by specify `files` parameter, which acccepts a `Map<String, File>`.  
+
+```dart
+XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+if (file != null) {
+    _flutterWearOsConnectivity.syncData(path: "/data-image-path", data: {
+        "message":  "Data sync by AndroidOS app at ${DateTime.now().millisecondsSinceEpoch}",
+        "count": 10,
+        "bytearray8": Uint8List(8),
+        "bytearray16": Uint16List(16),
+        "sampleChildMap": {
+            "message": Data sync by AndroidOS app at ${DateTime.now().millisecondsSinceEpoch}",
+                "count": 10,
+                "bytearray8": Uint8List(8),
+                "bytearray16": Uint16List(16),
+                "sampleMap": {"key": "sadas"}
+            }
+        },
+        /// Specifiy files that you want to syncronize right here
+        files: {
+            "sample-image": File(file.path),
+            "sample-image1": File(file.path),
+            "sample-image2": File(file.path),
+        }
+    );
+}
+```
+
+#### Obtain all available `DataItems` <a name="sync_data_3"/>
+You can obtain all available `DataItems` on Android Wear network by calling `getAllDataItems` method
+
+```dart
+List<DataItem> _allDataItems = await _flutterWearOsConnectivity.getAllDataItems();
+```
+
+#### Find `DataItem` from specific path <a name="sync_data_4"/>
+You can also find a `DataItem` on specific path by calling `findDataItemOnPath` method
+
+> Note: In order to specificly find a `DataItem`, you must provide a full URI path, which mean all components of that URI must not contain wildcard value (`*`)
+
+```dart
+DataItem? _foundDataItem = await _flutterWearOsConnectivity.findDataItemOnPath(pathURI: Uri(scheme: "wear", host: "123456", path: "/data-path"));
+```
+
+This method returns an optional `DataItem` indicating whether the `DataItem` can be found.
+
+#### Find `DataItems` from specific path <a name="sync_data_5"/>
+You can also find all `DataItems` that associated with specific path by calling `findDataItemsOnPath` method
+> Note: If URI path is fully specified, this method will find at most one data item. If path contains a wildcard host, multiple data items may be found, since different devices may create data items with the same path. See [this](https://developers.google.com/android/reference/com/google/android/gms/wearable/DataClient) for details of the URI format.
+
+```dart
+List<DataItem> _foundDataItems = await _flutterWearOsConnectivity.findDataItemsOnPath(pathURI: Uri(scheme: "wear", host: "*", path: "/data-path"));
+```
+
+#### Delete `DataItems` from specific path <a name="sync_data_6"/>
+You can also delete all `DataItems` on a specific path.
+>Note: If URI path is fully specified, this method will delete at most one data item. If path contains a wildcard host, multiple data items may be deleted, since different devices may create data items with the same path. See [this](https://developers.google.com/android/reference/com/google/android/gms/wearable/DataClient) for details of the URI format.
+
+#### Listen to upcoming `DataItem` change or delete events <a name="sync_data_7"/>
+`DataItem` change or delete events will be constructed inside `DataEvent` objects
+
+`DataEvent` object contains following properties:
+- `dataItem`
+The `DataItem` associated with this event.
+
+- `type`
+The `DataEventType` enum value indicating which type of event is it. Can be `changed` or `deleted`.
+
+- `isDataValid`
+A `bool` value indicating if this data is valid
+
+You can either listen to global data changed events
+
+```dart
+_flutterWearOsConnectivity.dataChanged().listen((dataEvents) {
+    inspect(dataEvents)              
+});
+```
+
+Or listen to specific path data events
+
+```dart
+_flutterWearOsConnectivity.dataChanged(
+    pathURI: Uri(
+        scheme: "wear",
+        host: "*",
+        path: "/wearos-message-path")
+    .listen((dataEvents) {
+        inspect(dataEvents);
+    }
+);
+```
+
+#### Unlisten to `DataItem` changed <a name="sync_data_8"/>
+You can either unlisten to global data changed events
+
+```dart
+await _flutterWearOsConnectivity.removeDataListener();
+```
+
+Or unlisten to specific path data events
+
+```dart
+await _flutterWearOsConnectivity.removeDataListener(
+    pathURI: Uri(
+        scheme: "wear",
+        host: "*",
+        path: "/wearos-message-path"
+    )
+);
+```
+
+For more details, please check out my [Flutter example project](https://github.com/ssttonn/flutter_watch_os_connectivity/tree/master/example) and [WearOS example project](https://github.com/ssttonn/WearOSTestApp).

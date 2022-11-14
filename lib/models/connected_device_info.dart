@@ -4,12 +4,13 @@ class WearOsDevice {
   ///An opaque string that represents a node in the Android Wear network.
   final String id;
 
-  ///The name of the device.
+  ///The name of the [WearOsDevice].
   final String name;
 
-  ///A [bool] value indicating that this device can be considered geographically nearby the local device.
+  ///A [bool] value indicating that this [WearOsDevice] can be considered geographically nearby the local [WearOsDevice].
   final bool isNearby;
 
+  ///A method gets the package name for the Companion application associated with this [WearOsDevice].
   late Future<String?> Function() getCompanionPackageName;
 
   WearOsDevice({required this.id, required this.name, required this.isNearby});

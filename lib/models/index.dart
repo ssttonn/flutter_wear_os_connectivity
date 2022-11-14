@@ -1,7 +1,7 @@
 library models;
 
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter/services.dart';
 

@@ -1,8 +1,13 @@
 part of models;
 
 class DataEvent {
+  ///The [DataEventType] enum value indicating which type of event is it. Can be [DataEventType.changed] or [DataEventType.deleted].
   final DataEventType type;
+
+  ///The [DataItem] associated with this event.
   final DataItem dataItem;
+
+  /// A [bool] value indicating if this data is valid
   final bool isDataValid;
 
   DataEvent(

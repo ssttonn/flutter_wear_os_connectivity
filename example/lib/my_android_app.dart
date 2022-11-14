@@ -44,7 +44,7 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
       _flutterWearOsConnectivity.getAllDataItems().then(inspect);
       _connectedDeviceCapabilitySubscription = _flutterWearOsConnectivity
           .capabilityChanged(
-              capabilityPath: Uri(
+              capabilityPathURI: Uri(
                   scheme: "wear", // Default scheme for WearOS app
                   host: "*", // Accept all path
                   path:
@@ -155,7 +155,7 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
                     _selectedDevice = info;
                     _messageSubscriptions.add(_flutterWearOsConnectivity
                         .messageReceived(
-                            path: Uri(
+                            pathURI: Uri(
                                 scheme: "wear",
                                 host: _selectedDevice?.id,
                                 path: "/wearos-message-path"))
@@ -168,7 +168,8 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
                         .dataChanged()
                         .listen((events) {
                       setState(() {
-                        if (events[0].dataItem.uri.path == "/data-image-path") {
+                        if (events[0].dataItem.pathURI.path ==
+                            "/data-image-path") {
                           _imageFile = events[0].dataItem.files["sample-image"];
                         }
                         _dataItem = events[0].dataItem;
@@ -231,7 +232,7 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
               ? [
                   Text("Raw Data: ${_dataItem!.data.toString()}"),
                   Text("Decrypted Data: ${_dataItem!.mapData["message"]}"),
-                  Text("Data path: ${_dataItem!.uri.path}"),
+                  Text("Data path: ${_dataItem!.pathURI.path}"),
                 ]
               : [],
           CupertinoButton(
@@ -254,7 +255,7 @@ class _MyAndroidAppState extends State<MyAndroidApp> {
                       "Data sync by AndroidOS app at ${DateTime.now().millisecondsSinceEpoch}"
                 }).then((value) {
                   _flutterWearOsConnectivity
-                      .findDataItemFromUri(uri: value!.uri)
+                      .findDataItemOnURIPath(pathURI: value!.pathURI)
                       .then(inspect);
                 });
               }),

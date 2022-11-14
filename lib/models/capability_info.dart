@@ -1,7 +1,10 @@
 part of models;
 
 class CapabilityInfo {
+  ///Name of capability
   final String name;
+
+  ///A Set of [WearOsDevice] indicating which devices associated with corresponding capability.
   final Set<WearOsDevice> associatedDevices;
   CapabilityInfo({required this.name, required this.associatedDevices});
 

@@ -1,9 +1,16 @@
 part of models;
 
 class WearOSMessage {
+  ///An Uin8List payload that represents message data.
   final Uint8List data;
+
+  ///A unique `String` path represents message route within the Android Wear network.
   final String path;
+
+  ///The [String] uniquely identifies the [WearOSMessage] once it is sent.
   final int requestId;
+
+  /// The device ID of the sender.
   final String sourceNodeId;
 
   WearOSMessage(

@@ -1,19 +1,26 @@
 part of models;
 
 class DataItem {
-  final Uri uri;
+  ///A unique URI path represents data route within the Android Wear network.
+  final Uri pathURI;
+
+  ///An Uin8List payload that represents the encoded data.
   final Uint8List data;
+
+  ///A human-readable [Map] data of [data].
   final Map<String, dynamic> mapData;
+
+  ///List of files contained inside this[DataItem]
   final Map<String, File> files;
   DataItem(
-      {required this.uri,
+      {required this.pathURI,
       required this.data,
       required this.mapData,
       this.files = const {}});
 
   factory DataItem.fromJson(Map<String, dynamic> json) {
     return DataItem(
-        uri: Uri.tryParse(json["uri"]) ?? Uri(),
+        pathURI: Uri.tryParse(json["uri"]) ?? Uri(),
         data: json["data"] ?? Uint8List(0),
         mapData: (json["map"] as Map? ?? {})
             .map((key, value) => MapEntry(key.toString(), value)),

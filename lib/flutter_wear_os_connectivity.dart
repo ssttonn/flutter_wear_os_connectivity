@@ -2,7 +2,7 @@ library flutter_wear_os_connectivity;
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_watch_platform_interface/flutter_smart_watch_platform_interface.dart';
@@ -112,13 +112,13 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
   /// This [Stream] emit a [CapabilityInfo] each time the capability's changed.
   Stream<CapabilityInfo> capabilityChanged(
       {String? capabilityName,
-      Uri? capabilityPath,
+      Uri? capabilityPathURI,
       UriFilterType filterType = UriFilterType.literal}) async* {
-    if (capabilityName == null && capabilityPath == null) {
+    if (capabilityName == null && capabilityPathURI == null) {
       throw "Name or uri must be specified";
     }
     await removeCapabilityListener(
-        capabilityName: capabilityName, capabilityUri: capabilityPath);
+        capabilityName: capabilityName, capabilityPathURI: capabilityPathURI);
     await channel.invokeMethod(
         "addCapabilityListener",
         capabilityName != null
@@ -126,11 +126,11 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
                 "name": capabilityName,
               }
             : {
-                "path": capabilityPath.toString(),
+                "path": capabilityPathURI.toString(),
                 "filterType": filterType.index
               });
 
-    String key = capabilityName ?? capabilityPath.toString();
+    String key = capabilityName ?? capabilityPathURI.toString();
     Map<String, StreamController<CapabilityInfo>>
         _capabilityInfoStreamControllers =
         _wearOSObserver.streamControllers[ObservableType.capability]
@@ -141,11 +141,11 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
 
   /// Completely remove a capability listener
   Future<bool> removeCapabilityListener(
-      {String? capabilityName, Uri? capabilityUri}) async {
-    if (capabilityName == null && capabilityUri == null) {
+      {String? capabilityName, Uri? capabilityPathURI}) async {
+    if (capabilityName == null && capabilityPathURI == null) {
       throw "Name or uri must be specified";
     }
-    String key = capabilityName ?? capabilityUri.toString();
+    String key = capabilityName ?? capabilityPathURI.toString();
     if (_wearOSObserver.streamControllers[ObservableType.capability]!
         .containsKey(key)) {
       _wearOSObserver.streamControllers[ObservableType.capability]![key]
@@ -156,7 +156,7 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
         "removeCapabilityListener",
         capabilityName != null
             ? {"name": capabilityName}
-            : {"path": capabilityUri.toString()});
+            : {"path": capabilityPathURI.toString()});
     return result ?? false;
   }
 
@@ -177,15 +177,16 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
   ///
   /// Message events can either be listen in specific message path or globally.
   Stream<WearOSMessage> messageReceived(
-      {Uri? path, UriFilterType filterType = UriFilterType.literal}) async* {
-    await removeMessageListener(path: path);
+      {Uri? pathURI, UriFilterType filterType = UriFilterType.literal}) async* {
+    await removeMessageListener(pathURI: pathURI);
     await channel.invokeMethod(
         "addMessageListener",
-        path == null
+        pathURI == null
             ? {"name": "global_message_channel"}
-            : {"path": path.toString(), "filterType": filterType.index});
+            : {"path": pathURI.toString(), "filterType": filterType.index});
 
-    String key = path == null ? "global_message_channel" : path.toString();
+    String key =
+        pathURI == null ? "global_message_channel" : pathURI.toString();
     Map<String, StreamController<WearOSMessage>> _messageStreamControllers =
         _wearOSObserver.streamControllers[ObservableType.message]
             as Map<String, StreamController<WearOSMessage>>;
@@ -194,8 +195,9 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
   }
 
   /// Remove message listener
-  Future removeMessageListener({Uri? path}) {
-    String key = path == null ? "global_message_channel" : path.toString();
+  Future removeMessageListener({Uri? pathURI}) {
+    String key =
+        pathURI == null ? "global_message_channel" : pathURI.toString();
     if (_wearOSObserver.streamControllers[ObservableType.message]!
         .containsKey(key)) {
       _wearOSObserver.streamControllers[ObservableType.message]![key]?.close();
@@ -203,11 +205,14 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     }
     return channel.invokeMethod(
         "removeMessageListener",
-        path == null
+        pathURI == null
             ? {"name": "global_message_channel"}
-            : {"path": path.toString()});
+            : {"path": pathURI.toString()});
   }
 
+  /// Sync data on a specific path
+  ///
+  /// This method return an optional [DataItem] indicating whether the [DataItem] is successfully synchronized.
   Future<DataItem?> syncData(
       {required String path,
       required Map<String, dynamic> data,
@@ -226,6 +231,7 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     return null;
   }
 
+  /// Delete all [DataItem]s on specific [pathURI]
   Future<int> deleteDataItems(
       {required Uri uri, UriFilterType filterType = UriFilterType.literal}) {
     return channel.invokeMethod("deleteDataItems", {
@@ -234,22 +240,28 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     }).then((deleteCount) => deleteCount ?? 0);
   }
 
-  Future<List<DataItem>> findDataItems(
-      {required Uri uri,
+  /// Find all [DataItem]s on specific [pathURI]
+  Future<List<DataItem>> findDataItemsOnURIPath(
+      {required Uri pathURI,
       UriFilterType filterType = UriFilterType.literal}) async {
     List? results = await channel.invokeMethod("getDataItems",
-        {"path": uri.toString(), "filterType": filterType.index});
+        {"path": pathURI.toString(), "filterType": filterType.index});
     return (results ?? [])
         .map((result) => DataItem.fromJson((result as Map? ?? {})
             .map((key, value) => MapEntry(key.toString(), value))))
         .toList();
   }
 
-  Future<DataItem?> findDataItemFromUri({required Uri uri}) async {
-    Map? result = await channel.invokeMethod("findDataItem", uri.toString());
+  /// Find a specific [DataItem] on specific [pathURI]
+  ///
+  /// This method returns an optional [DataItem] indicating whether the [DataItem] can be found.
+  Future<DataItem?> findDataItemOnURIPath({required Uri pathURI}) async {
+    Map? result =
+        await channel.invokeMethod("findDataItem", pathURI.toString());
     return DataItem.fromJson((result ?? {}).toMapStringDynamic());
   }
 
+  ///Obtain all available [DataItem]s on Android Wear network
   Future<List<DataItem>> getAllDataItems() async {
     List? results = await channel.invokeMethod("getAllDataItems");
     return (results ?? [])
@@ -258,15 +270,16 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
         .toList();
   }
 
+  /// Listen to data change or delete events
   Stream<List<DataEvent>> dataChanged(
-      {Uri? path, UriFilterType filterType = UriFilterType.literal}) async* {
-    await removeDataListener(path: path);
+      {Uri? pathURI, UriFilterType filterType = UriFilterType.literal}) async* {
+    await removeDataListener(pathURI: pathURI);
     await channel.invokeMethod(
         "addDataListener",
-        path == null
+        pathURI == null
             ? {"name": "global_data_channel"}
-            : {"path": path.toString(), "filterType": filterType.index});
-    String key = path == null ? "global_data_channel" : path.toString();
+            : {"path": pathURI.toString(), "filterType": filterType.index});
+    String key = pathURI == null ? "global_data_channel" : pathURI.toString();
 
     Map<String, StreamController<List<DataEvent>>> _dataStreamControllers =
         _wearOSObserver.streamControllers[ObservableType.data]
@@ -275,8 +288,9 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     yield* _dataStreamControllers[key]!.stream;
   }
 
-  Future removeDataListener({Uri? path}) {
-    String key = path == null ? "global_data_channel" : path.toString();
+  /// Unlisten to data change or delete events
+  Future removeDataListener({Uri? pathURI}) {
+    String key = pathURI == null ? "global_data_channel" : pathURI.toString();
 
     if (_wearOSObserver.streamControllers[ObservableType.data]!
         .containsKey(key)) {
@@ -285,9 +299,9 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     }
     return channel.invokeMethod(
         "removeDataListener",
-        path != null
+        pathURI != null
             ? {"name": "global_data_channel"}
-            : {"path": path.toString()});
+            : {"path": pathURI.toString()});
   }
 
   @override
