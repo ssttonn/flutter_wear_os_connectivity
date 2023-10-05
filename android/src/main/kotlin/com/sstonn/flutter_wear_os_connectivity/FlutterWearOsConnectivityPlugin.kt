@@ -500,11 +500,18 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     private fun addNewMessageListener(result: Result, key: String, filterType: Int?) {
+        Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener start" )
+
         scope(Dispatchers.IO).launch {
             try {
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 1 ${messageListeners.containsKey(key)}" )
+
                 messageListeners[key]?.let {
                     messageClient.removeListener(it).await()
                 }
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 2" )
+
                 val newListener: MessageClient.OnMessageReceivedListener =
                     MessageClient.OnMessageReceivedListener {
                         callbackChannel.invokeMethod(
@@ -515,13 +522,22 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             )
                         )
                     }
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 3" )
+
                 messageListeners[key] = newListener
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4" )
+
                 if (filterType == null) {
                     messageClient.addListener(messageListeners[key]!!).await()
                 } else {
                     messageClient.addListener(messageListeners[key]!!, Uri.parse(key), filterType)
                         .await()
                 }
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 5" )
+
                 scope(Dispatchers.Main).launch {
                     result.success(null)
                 }
