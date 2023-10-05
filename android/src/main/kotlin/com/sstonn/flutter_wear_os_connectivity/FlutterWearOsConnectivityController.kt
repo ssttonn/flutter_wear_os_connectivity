@@ -89,6 +89,8 @@ class FlutterWearOsConnectivityController {
                     dataClient = Wearable.getDataClient(it.activity)
                     capabilityClient = Wearable.getCapabilityClient(it.activity)
                 }
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] activityBinding: $activityBinding" )
                 result.success(null)
             }
             "getConnectedDevices" -> {
@@ -550,6 +552,9 @@ class FlutterWearOsConnectivityController {
                     result.success(null)
                 }
             } catch (e: Exception) {
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener ERROR $e" )
+
                 handleFlutterError(
                     result,
                     "Unable to listen to capability changed, please try again"
