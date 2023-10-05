@@ -540,10 +540,16 @@ class FlutterWearOsConnectivityController {
                 Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4" )
 
                 if (filterType == null) {
+                    Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4.1 start" )
                     messageClient.addListener(messageListeners[key]!!).await()
+
+                    Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4.1 end" )
                 } else {
+                    Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4.2 start" )
                     messageClient.addListener(messageListeners[key]!!, Uri.parse(key), filterType)
                         .await()
+
+                    Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 4.2 end" )
                 }
 
                 Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener 5" )
