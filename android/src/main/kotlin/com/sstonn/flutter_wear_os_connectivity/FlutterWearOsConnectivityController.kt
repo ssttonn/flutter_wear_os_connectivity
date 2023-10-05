@@ -23,7 +23,7 @@ import kotlin.io.path.pathString
 import io.flutter.plugin.common.BinaryMessenger
 import android.content.Context
 
-class FlutterWearOsConnectivityController {
+class FlutterWearOsConnectivityController  {
     private lateinit var channel: MethodChannel
     private lateinit var callbackChannel: MethodChannel
     private var scope: (CoroutineContext) -> CoroutineScope = {
@@ -62,6 +62,13 @@ class FlutterWearOsConnectivityController {
             messenger,
             "sstonn/flutter_wear_os_connectivity_callback"
         )
+
+
+            messageClient = Wearable.getMessageClient(context)
+            nodeClient = Wearable.getNodeClient(context)
+            dataClient = Wearable.getDataClient(context)
+            capabilityClient = Wearable.getCapabilityClient(context)
+
     }
 
     internal fun deinitialize() {
@@ -83,12 +90,7 @@ class FlutterWearOsConnectivityController {
             }
             "configure" -> {
                 // Initialize all clients
-                activityBinding?.let { it ->
-                    messageClient = Wearable.getMessageClient(it.activity)
-                    nodeClient = Wearable.getNodeClient(it.activity)
-                    dataClient = Wearable.getDataClient(it.activity)
-                    capabilityClient = Wearable.getCapabilityClient(it.activity)
-                }
+
 
                 Log.d("WEAROS", "[WEAROS PLUGIN] activityBinding: $activityBinding" )
                 result.success(null)

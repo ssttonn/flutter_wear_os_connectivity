@@ -25,6 +25,8 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler {
 
     private val pluginController = FlutterWearOsConnectivityController()
 
+
+
     override fun onAttachedToEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         val channel = MethodChannel(binding.binaryMessenger, "sstonn/flutter_wear_os_connectivity")
         channel.setMethodCallHandler(this)
@@ -43,6 +45,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler {
         Log.d("WEAROS", "[WEAROS PLUGIN] ${call.method}" )
         pluginController.execute(call, result)
     }
+
 
 }
 
