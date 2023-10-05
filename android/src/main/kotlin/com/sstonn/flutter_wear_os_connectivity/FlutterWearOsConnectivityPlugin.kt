@@ -1,6 +1,7 @@
 package com.sstonn.flutter_wear_os_connectivity
 
 import android.net.Uri
+import android.util.Log
 import android.util.Pair
 import androidx.annotation.NonNull
 import com.google.android.gms.wearable.*
@@ -67,6 +68,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+        Log.d("WEAROS", "[WEAROS PLUGIN] ${call.method}" )
         when (call.method) {
             "isSupported" -> {
                 result.success(true)
@@ -290,6 +292,9 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                 val name = arguments["name"] as String?
                 val path = arguments["path"] as String?
                 val filterType = arguments["filterType"] as Int?
+
+                Log.d("WEAROS", "[WEAROS PLUGIN] addMessageListener $name $path $filterType" )
+
                 if (name != null) {
                     addNewMessageListener(result, name, null)
                 } else if (path != null) {
