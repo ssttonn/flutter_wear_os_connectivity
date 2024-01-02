@@ -19,6 +19,7 @@ import kotlinx.coroutines.tasks.await
 import java.io.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.pathString
+import android.content.Context
 
 class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private lateinit var channel: MethodChannel
@@ -35,7 +36,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     private lateinit var capabilityClient: CapabilityClient
 
     //Activity and context references
-    private var activityBinding: ActivityPluginBinding? = null
+    private var context: Context? = null
 
     //Listeners for capability changed
     private var capabilityListeners: MutableMap<String, CapabilityClient.OnCapabilityChangedListener> =
@@ -51,6 +52,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
 
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        this.context = flutterPluginBinding.getApplicationContext()
         channel = MethodChannel(
             flutterPluginBinding.binaryMessenger,
             "sstonn/flutter_wear_os_connectivity"
@@ -63,7 +65,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        activityBinding = null
+        context = null
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -72,12 +74,18 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                 result.success(true)
             }
             "configure" -> {
+                System.out.println("Configuring Wear OS Connectivity Plugin")
+
                 // Initialize all clients
-                activityBinding?.let { it ->
-                    messageClient = Wearable.getMessageClient(it.activity)
-                    nodeClient = Wearable.getNodeClient(it.activity)
-                    dataClient = Wearable.getDataClient(it.activity)
-                    capabilityClient = Wearable.getCapabilityClient(it.activity)
+                context?.let { it ->
+                    messageClient = Wearable.getMessageClient(it)
+                    nodeClient = Wearable.getNodeClient(it)
+                    dataClient = Wearable.getDataClient(it)
+                    capabilityClient = Wearable.getCapabilityClient(it)
+
+                    // Log that we are complete
+
+                    System.out.println("Wear OS Connectivity Plugin is ready")
                 }
                 result.success(null)
             }
@@ -228,6 +236,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 )
                             }
                         } catch (e: Exception) {
+                            e.printStackTrace()
                             handleFlutterError(
                                 result,
                                 "Unable to register new capability, please try again"
@@ -663,19 +672,15 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        this.activityBinding = binding
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        activityBinding = null
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        this.activityBinding = binding
     }
 
     override fun onDetachedFromActivity() {
-        activityBinding = null
     }
 
     private fun fromDataMap(dataMap: DataMap): Pair<HashMap<String, *>, HashMap<String, *>> {
@@ -868,6 +873,3 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
 }
-
-
-
