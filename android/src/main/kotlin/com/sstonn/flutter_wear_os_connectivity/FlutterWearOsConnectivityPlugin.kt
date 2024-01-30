@@ -1,5 +1,6 @@
 package com.sstonn.flutter_wear_os_connectivity
 
+import android.content.Intent
 import android.net.Uri
 import android.util.Pair
 import androidx.annotation.NonNull
@@ -8,12 +9,14 @@ import com.google.android.gms.wearable.CapabilityClient.FILTER_ALL
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import androidx.wear.remote.interactions.RemoteActivityHelper
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.*
@@ -33,6 +36,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     private lateinit var nodeClient: NodeClient
     private lateinit var dataClient: DataClient
     private lateinit var capabilityClient: CapabilityClient
+    private lateinit var remoteActivityHelper: RemoteActivityHelper
 
     //Activity and context references
     private var activityBinding: ActivityPluginBinding? = null
@@ -78,6 +82,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     nodeClient = Wearable.getNodeClient(it.activity)
                     dataClient = Wearable.getDataClient(it.activity)
                     capabilityClient = Wearable.getCapabilityClient(it.activity)
+                    remoteActivityHelper = RemoteActivityHelper(it.activity)
                 }
                 result.success(null)
             }
@@ -283,6 +288,22 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     } catch (e: Exception) {
                         handleFlutterError(result, e.message ?: "")
                     }
+                }
+            }
+            "startRemoteActivity" -> {
+                val arguments = call.arguments as Map<*, *>
+                val nodeId = arguments["nodeId"] as String
+                val url = arguments["url"] as String
+                val intent = Intent(Intent.ACTION_VIEW)
+                    .addCategory(Intent.CATEGORY_BROWSABLE)
+                    .setData(Uri.parse(url))
+
+                scope(Dispatchers.IO).launch {
+                    remoteActivityHelper
+                        .startRemoteActivity(
+                            targetIntent = intent,
+                            targetNodeId = nodeId
+                        ).await()
                 }
             }
             "addMessageListener" -> {

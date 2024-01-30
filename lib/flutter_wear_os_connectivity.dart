@@ -173,6 +173,15 @@ class FlutterWearOsConnectivity extends FlutterSmartWatchPlatformInterface {
     })).then((messageId) => messageId ?? -1);
   }
 
+  /// Start Remote Activity on Wearable
+  /// e.g. startRemoteActivity(url: "market://details?id=com.example.app", deviceId: "wearableId")
+  Future<void> startRemoteActivity({required String url, required String deviceId}) {
+    return channel.invokeMethod("startRemoteActivity", {
+      "url": url,
+      "nodeId": deviceId,
+    });
+  }
+
   /// Listen to message received events
   ///
   /// Message events can either be listen in specific message path or globally.

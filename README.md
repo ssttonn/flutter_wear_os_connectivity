@@ -27,6 +27,7 @@ A plugin that provides a wrapper that enables Flutter apps to communicate with a
         - [Obtaining all connected devices](#getting_paired_device_accessibility_1)
         - [Obtaining local device](#getting_paired_device_accessibility_2)
         - [Find Device ID from bluetooth address](#getting_paired_device_accessibility_3)
+	- [Start Remote Activity](#start_remote_activity)				
     - [Advertise and query remote capabilities](#handling_capabilities)
         - [Advertise new device capability](#handling_capabilities_1)
         - [Remove existing capability](#handling_capabilities_2)
@@ -145,6 +146,21 @@ Call this method when you have a bluetooth address and need to find `WearOsDevic
 ```dart
 String? deviceId = await _flutterWearOsConnectivity.findDeviceIdFromBluetoothAddress("AA-AA-AA-AA-AA-AA");
 ```
+
+---
+### Start Remote Activity <a name="start_remote_activity"/>
+
+Support for opening android intents on other devices. 
+Example to open your app in the Google Play Store on the Watch
+```dart
+const playStoreUrl = 'http://play.google.com/store/apps/details?id=com.example.app'
+_flutterWearOsConnectivity.getConnectedDevices().then((value) async{
+      for (final watch in value) {
+        await _flutterWearOsConnectivity.startRemoteActivity(url: playStoreUrl, deviceId: watch.id);
+      }
+    });
+```
+
 ---
 ### Advertise and query remote capabilities <a name="handling_capabilities"/>
 `FlutterWearOsConnectivity` plugin provides information on which `WearOsDevice`s on the Android Wear network support which custom app capabilities. `WearOsDevice`s represent both mobile and wearable devices that are connected to the network. A capability is a feature that an app defines.
