@@ -1,6 +1,6 @@
 name: flutter_wear_os_connectivity
 description: A plugin that provides a wrapper that enables Flutter apps to communicate with apps running on WearOS.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/ssttonn/flutter_wear_os_connectivity
 
 environment:

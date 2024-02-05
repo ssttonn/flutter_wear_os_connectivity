@@ -19,6 +19,9 @@ import kotlinx.coroutines.tasks.await
 import java.io.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.pathString
+import android.content.Context
+import android.util.Log
+
 
 class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private lateinit var channel: MethodChannel
@@ -28,6 +31,8 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
 
+    val TAG = "FlutterWearOsConnectivityPlugin"
+
     //Clients needed for Data Layer API
     private lateinit var messageClient: MessageClient
     private lateinit var nodeClient: NodeClient
@@ -35,7 +40,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     private lateinit var capabilityClient: CapabilityClient
 
     //Activity and context references
-    private var activityBinding: ActivityPluginBinding? = null
+    private var context: Context? = null
 
     //Listeners for capability changed
     private var capabilityListeners: MutableMap<String, CapabilityClient.OnCapabilityChangedListener> =
@@ -51,6 +56,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
 
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        this.context = flutterPluginBinding.getApplicationContext()
         channel = MethodChannel(
             flutterPluginBinding.binaryMessenger,
             "sstonn/flutter_wear_os_connectivity"
@@ -63,7 +69,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        activityBinding = null
+        context = null
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -72,12 +78,22 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                 result.success(true)
             }
             "configure" -> {
+                Log.i(
+                    TAG,
+                    "Configuring Wear OS Connectivity Plugin",
+                )
+
                 // Initialize all clients
-                activityBinding?.let { it ->
-                    messageClient = Wearable.getMessageClient(it.activity)
-                    nodeClient = Wearable.getNodeClient(it.activity)
-                    dataClient = Wearable.getDataClient(it.activity)
-                    capabilityClient = Wearable.getCapabilityClient(it.activity)
+                context?.let { it ->
+                    messageClient = Wearable.getMessageClient(it)
+                    nodeClient = Wearable.getNodeClient(it)
+                    dataClient = Wearable.getDataClient(it)
+                    capabilityClient = Wearable.getCapabilityClient(it)
+
+                    // Log that we are complete
+
+                    Log.i(
+                        TAG, "Wear OS Connectivity Plugin is ready")
                 }
                 result.success(null)
             }
@@ -90,7 +106,11 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 nodes.map { it.toRawMap() }
                             )
                         }
-                    } catch (_: Exception) {
+                    } catch (ex: Exception) {
+                        Log.e(
+                            TAG,
+                            "Can't retrieve connected devices, please try again",ex
+                        )
                         handleFlutterError(
                             result,
                             "Can't retrieve connected devices, please try again"
@@ -110,7 +130,11 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                     packageName
                                 )
                             }
-                        } catch (_: Exception) {
+                        } catch (ex: Exception) {
+                            Log.e(
+                                TAG,
+                                "No companion package found for $nodeId",ex
+                            )
                             handleFlutterError(result, "No companion package found for $nodeId")
                         }
 
@@ -126,7 +150,11 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 localDeviceInfo
                             )
                         }
-                    } catch (_: Exception) {
+                    } catch (ex: Exception) {
+                        Log.e(
+                            TAG,
+                            "Can't retrieve local device info, please try again",ex
+                        )
                         handleFlutterError(
                             result,
                             "Can't retrieve local device info, please try again"
@@ -145,7 +173,11 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                     foundNodeId
                                 )
                             }
-                        } catch (_: Exception) {
+                        } catch (ex: Exception) {
+                            Log.e(
+                                TAG,
+                                "No device found with mac address $macAddress",ex
+                            )
                             result.success(null)
                         }
                     }
@@ -165,7 +197,11 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 capabilities
                             )
                         }
-                    } catch (e: Exception) {
+                    } catch (ex: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to retrieve capabilities, please try again",ex
+                        )
                         scope(Dispatchers.Main).launch {
                             result.success(
                                 result.success(emptyMap<String, Map<String, Any>>())
@@ -188,6 +224,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             )
                         }
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to retrieve capability, please try again",e
+                        )
                         scope(Dispatchers.Main).launch {
                             result.success(
                                 null
@@ -228,6 +268,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 )
                             }
                         } catch (e: Exception) {
+                            Log.e(
+                                TAG,
+                                "Unable to register new capability, please try again",e
+                            )
                             handleFlutterError(
                                 result,
                                 "Unable to register new capability, please try again"
@@ -251,6 +295,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 )
                             }
                         } catch (e: Exception) {
+                            Log.e(
+                                TAG,
+                                "Unable to remove capability, please try again",e
+                            )
                             handleFlutterError(
                                 result,
                                 "Unable to remove capability, please try again"
@@ -281,6 +329,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             )
                         }
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to send message, please try again",e
+                        )
                         handleFlutterError(result, e.message ?: "")
                     }
                 }
@@ -317,6 +369,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             result.success(rawDataItem)
                         }
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to find data item associated with $path",e
+                        )
                         handleFlutterError(
                             result,
                             "Unable to find data item associated with $path"
@@ -333,6 +389,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             result.success(rawDataItems)
                         }
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to retrieve data items, please try again",e
+                        )
                         handleFlutterError(result, "Unable to find data item")
                     }
                 }
@@ -360,10 +420,18 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                                 result.success(dataItemRawMap)
                             }
                         } catch (e: Exception) {
+                            Log.e(
+                                TAG,
+                                "Unable to sync data, please try again",e
+                            )
                             handleFlutterError(result, e.toString())
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e(
+                        TAG,
+                        "Unable to sync data, please try again",e
+                    )
                     handleFlutterError(result, "No data found")
                 }
             }
@@ -381,6 +449,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                             )
                         }
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to delete data items on $path",e
+                        )
                         handleFlutterError(result, "Unable to delete data items on $path")
                     }
                 }
@@ -401,6 +473,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         }
                         buffer.release()
                     } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "Unable to retrieve items on $path",e
+                        )
                         handleFlutterError(result, "Unable to retrieve items on $path")
                     }
                 }
@@ -464,6 +540,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     )
                 }
             } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Unable to listen to capability changed, please try again",e
+                )
                 handleFlutterError(
                     result,
                     "Unable to listen to capability changed, please try again"
@@ -485,6 +565,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         )
                     }
                 } catch (e: Exception) {
+                    Log.e(
+                        TAG,
+                        "Unable to remove capability listener, please try again",e
+                    )
                     result.success(false)
 
                 }
@@ -521,6 +605,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     result.success(null)
                 }
             } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Unable to listen to capability changed, please try again",e
+                )
                 handleFlutterError(
                     result,
                     "Unable to listen to capability changed, please try again"
@@ -542,6 +630,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         )
                     }
                 } catch (e: Exception) {
+                    Log.e(
+                        TAG,
+                        "Unable to remove message listener, please try again",e
+                    )
                     result.success(false)
 
                 }
@@ -583,6 +675,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     result.success(null)
                 }
             } catch (e: Exception) {
+                Log.e(
+                    TAG,
+                    "Unable to listen to capability changed, please try again",e
+                )
                 handleFlutterError(
                     result,
                     "Unable to listen to capability changed, please try again"
@@ -610,10 +706,18 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         onDataResponse(rawEventData)
                     }
                 } catch (e: Exception) {
+                    Log.e(
+                        TAG,
+                        "Unable to handle data event buffer, please try again",e
+                    )
                     onError(e)
                 }
             }
         } catch (e: Exception) {
+            Log.e(
+                TAG,
+                "Unable to handle data event buffer, please try again",e
+            )
             onError(e)
         }
     }
@@ -647,6 +751,10 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         )
                     }
                 } catch (e: Exception) {
+                    Log.e(
+                        TAG,
+                        "Unable to remove data listener, please try again",e
+                    )
                     result.success(false)
                 }
             }
@@ -663,19 +771,15 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        this.activityBinding = binding
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        activityBinding = null
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        this.activityBinding = binding
     }
 
     override fun onDetachedFromActivity() {
-        activityBinding = null
     }
 
     private fun fromDataMap(dataMap: DataMap): Pair<HashMap<String, *>, HashMap<String, *>> {
@@ -868,6 +972,3 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
 }
-
-
-
