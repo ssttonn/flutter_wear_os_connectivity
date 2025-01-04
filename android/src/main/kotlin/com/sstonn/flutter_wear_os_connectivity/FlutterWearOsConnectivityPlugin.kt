@@ -86,14 +86,16 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                     try {
                         val nodes = nodeClient.connectedNodes.await()
                         scope(Dispatchers.Main).launch {
+                            val r = nodes.map { it.toRawMap() }
                             result.success(
-                                nodes.map { it.toRawMap() }
+                                r
                             )
                         }
-                    } catch (_: Exception) {
+                    } catch (error: Exception) {
                         handleFlutterError(
                             result,
-                            "Can't retrieve connected devices, please try again"
+                            "Can't retrieve connected devices, please try again",
+                            error
                         )
                     }
                 }
@@ -167,9 +169,7 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
                         }
                     } catch (e: Exception) {
                         scope(Dispatchers.Main).launch {
-                            result.success(
-                                result.success(emptyMap<String, Map<String, Any>>())
-                            )
+                           result.success(emptyMap<String, Map<String, Any>>())
                         }
                     }
                 }
@@ -656,11 +656,16 @@ class FlutterWearOsConnectivityPlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
 
-    private fun handleFlutterError(result: Result, message: String) {
+    private fun handleFlutterError(result: Result, message: String, exception: Exception? = null) {
         scope(Dispatchers.Main).launch {
-            result.error("500", message, null)
+            val errorMessage = if (exception != null) {
+                "$message\n${exception.message}"
+            } else {
+                message
+            }
+            result.error("500", errorMessage, exception)
         }
-    }
+    }    
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         this.activityBinding = binding
